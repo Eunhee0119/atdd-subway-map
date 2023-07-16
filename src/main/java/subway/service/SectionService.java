@@ -16,19 +16,22 @@ public class SectionService {
 
     private final LineRepository lineRepository;
     private final StationRepository stationRepository;
+
+    private final StationService stationService;
     private final SectionRepository sectionRepository;
 
-    public SectionService(LineRepository lineRepository, StationRepository stationRepository, SectionRepository sectionRepository1) {
+    public SectionService(LineRepository lineRepository, StationRepository stationRepository, StationService stationService, SectionRepository sectionRepository1) {
         this.lineRepository = lineRepository;
         this.stationRepository = stationRepository;
+        this.stationService = stationService;
         this.sectionRepository = sectionRepository1;
     }
 
     @Transactional
     public void saveSection(Long lineId, SectionRequest sectionRequest) {
         Line line = lineRepository.findById(lineId).orElseThrow(IllegalArgumentException::new);
-        Station upStation = stationRepository.findById(sectionRequest.getUpStationId()).orElseThrow(IllegalArgumentException::new);
-        Station downStation = stationRepository.findById(sectionRequest.getDownStationId()).orElseThrow(IllegalArgumentException::new);
+        Station upStation = stationService.getStations(sectionRequest.getUpStationId());
+        Station downStation = stationService.getStations(sectionRequest.getDownStationId());
 
         line.addSections(Section.builder()
                 .line(line)
@@ -41,7 +44,7 @@ public class SectionService {
     @Transactional
     public void removeSection(Long lineId, Long stationId) {
         Line line = lineRepository.findById(lineId).orElseThrow(IllegalArgumentException::new);
-        Station station = stationRepository.findById(stationId).get();
+        Station station = stationService.getStations(stationId);
 
         line.removeSections(station);
     }

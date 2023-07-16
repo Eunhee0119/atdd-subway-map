@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @Embeddable
 public class LineSections {
 
+    private static final int MIN_LIMIT = 1;
     @OneToMany(mappedBy = "line" , cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<Section> sections = new ArrayList<>();
 
@@ -27,11 +28,10 @@ public class LineSections {
     }
 
     public void remove(Station station){
-        int count = this.getSections().size();
-        if (count <= 1) {
+        if (sections.size() <= MIN_LIMIT) {
             throw new BadRequestSectionsException("노선에는 하나 이상의 구간이 존재해야합니다.");
         }
-        if (!this.getSections().get(count- 1).getDownStation().equals(station)) {
+        if (!getLastSections().hasDownStation(station)) {
             throw new BadRequestSectionsException("해당 노선의 마지막 하행 종점역이 아닙니다.");
         }
 
@@ -39,8 +39,19 @@ public class LineSections {
     }
 
 
+    public List<Station> getStations() {
+        List<Station> stations = sections.stream().map(Section::getUpStation).collect(Collectors.toList());
+        stations.add(getLastSections().getDownStation());
+        return stations;
+    }
+
+    private Section getLastSections() {
+         return sections.get(sections.size()- 1);
+    }
+
+
     private void isAddableSections(Section newSection) {
-        if(sections.size()<1) {
+        if(sections.isEmpty()) {
             return;
         }
         Station lastStation = sections.get(sections.size() - 1).getDownStation();
@@ -52,9 +63,4 @@ public class LineSections {
         }
     }
 
-    public List<Station> getStations() {
-        List<Station> stations = sections.stream().map(Section::getUpStation).collect(Collectors.toList());
-        stations.add(sections.get(sections.size()-1).getDownStation());
-        return stations;
-    }
 }

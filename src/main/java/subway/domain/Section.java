@@ -46,6 +46,7 @@ public class Section {
         this.distance = distance;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -61,5 +62,9 @@ public class Section {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public boolean hasDownStation(Station station) {
+        return downStation.equals(station);
     }
 }
